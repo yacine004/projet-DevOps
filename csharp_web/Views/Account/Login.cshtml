@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Connexion";
+}
+
+<div class="mobile-container">
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-circle"></div>
+                <div class="app-title">
+                    <span class="title-orange">Brasil</span> <span class="title-blue">Burger</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="products-container">
+        <div style="padding: 20px;">
+            <h2 style="text-align: center; margin-bottom: 20px;">Connexion</h2>
+
+            @if (!string.IsNullOrEmpty(ViewBag.Error))
+            {
+                <div style="color: red; text-align: center; margin-bottom: 10px;">@ViewBag.Error</div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div style="color: green; text-align: center; margin-bottom: 10px;">@TempData["SuccessMessage"]</div>
+            }
+
+            <form method="post" style="max-width: 400px; margin: 0 auto;">
+                <div style="margin-bottom: 15px;">
+                    <label for="nom" style="display: block; margin-bottom: 5px;">Nom</label>
+                    <input type="text" id="nom" name="nom" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" />
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="telephone" style="display: block; margin-bottom: 5px;">Numéro de téléphone</label>
+                    <input type="text" id="telephone" name="telephone" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;" />
+                </div>
+                <button type="submit" style="width: 100%; padding: 10px; background-color: #FF8C42; color: white; border: none; border-radius: 5px; cursor: pointer;">Se connecter</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="@Url.Action("Register", "Account")" style="color: #4A90E2;">Créer un compte</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: brasil_burger
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    image: brasilburger
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=brasil_burger;Username=postgres;Password=password;SSL Mode=Disable"
+      ASPNETCORE_URLS: "http://+:8080"
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:

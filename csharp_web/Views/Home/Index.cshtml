@@ -1,0 +1,187 @@
+﻿@{
+    ViewData["Title"] = "Accueil";
+    var filter = ViewBag.Filter ?? "all";
+    var burgers = ViewBag.Burgers as IEnumerable<csharp_web.Models.Burger>;
+    var complements = ViewBag.Complements as IEnumerable<csharp_web.Models.Complement>;
+    var menus = ViewBag.Menus as IEnumerable<csharp_web.Models.Menu>;
+
+    Func<string, string> getImageUrl = image =>
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return "https://via.placeholder.com/300x200?text=Image+indisponible";
+        }
+        if (image.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+        return Url.Content($"~/images/{image}");
+    };
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Accueil</title>
+    <link rel="stylesheet" href="~/css/accueil.css">
+</head>
+<body>
+    <!-- Conteneur principal mobile -->
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-circle"></div>
+                    <h1 class="app-title">
+                        <span class="title-orange">Brasil</span>
+                        <span class="title-blue">Burger</span>
+                    </h1>
+                </div>
+                <a href="@Url.Action("Index", "Panier")" class="cart-button">
+                    <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 2L7 6H2v14h20V6h-5l-2-4H9z"/>
+                        <path d="M9 6v8m6-8v8"/>
+                    </svg>
+                    <span class="cart-badge">@ViewBag.CartItemCount</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Catalogue Header -->
+        <div class="catalog-header">
+            <h2 class="catalog-title">Notre Catalogue</h2>
+            <p class="catalog-subtitle">Découvrez nos délicieux burgers et menus</p>
+
+            <!-- Barre de recherche -->
+            <form method="get" action="@Url.Action("Index", "Home")" class="search-bar">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" name="search" value="@ViewBag.Search" class="search-input" placeholder="Rechercher un produit">
+                <input type="hidden" name="filter" value="@filter" />
+                <button type="submit" style="display: none;"></button>
+            </form>
+
+            <!-- Filtres -->
+            <div class="filters">
+                <a href="@Url.Action("Index", "Home", new { filter = "all" })" class="filter-btn @(filter == "all" ? "active" : "")">Tout</a>
+                <a href="@Url.Action("Index", "Home", new { filter = "burgers" })" class="filter-btn @(filter == "burgers" ? "active" : "")">Burgers</a>
+                <a href="@Url.Action("Index", "Home", new { filter = "menus" })" class="filter-btn @(filter == "menus" ? "active" : "")">Menus</a>
+                <a href="@Url.Action("Index", "Home", new { filter = "complements" })" class="filter-btn @(filter == "complements" ? "active" : "")">Compléments</a>
+            </div>
+        </div>
+
+        <!-- Liste des produits -->
+        <div class="products-container">
+            <div class="products-grid">
+                @if (filter == "all" || filter == "burgers")
+                {
+                    @foreach (var burger in burgers ?? new List<csharp_web.Models.Burger>())
+                    {
+                        <div class="product-card">
+                            <img src="@getImageUrl(burger.Image)" alt="@burger.Nom" class="product-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+indisponible';">
+                            <div class="product-info">
+                                <h3 class="product-name">@burger.Nom</h3>
+                                <p class="product-description">@burger.Description</p>
+                                <div class="product-footer">
+                                    <span class="product-price">@burger.Prix.ToString("N0") FCFA</span>
+                                    <button class="add-btn" onclick="addToCart('Burger', @burger.Id, '@burger.Nom.Replace("'", "\\'")', @burger.Prix, '@burger.Image')">Ajouter</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (filter == "all" || filter == "complements")
+                {
+                    @foreach (var complement in complements ?? new List<csharp_web.Models.Complement>())
+                    {
+                        <div class="product-card">
+                            <img src="@getImageUrl(complement.Image)" alt="@complement.Nom" class="product-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+indisponible';">
+                            <div class="product-info">
+                                <h3 class="product-name">@complement.Nom</h3>
+                                <p class="product-description">@complement.Description</p>
+                                <div class="product-footer">
+                                    <span class="product-price">@complement.Prix.ToString("N0") FCFA</span>
+                                    <button class="add-btn" onclick="addToCart('Complement', @complement.Id, '@complement.Nom.Replace("'", "\\'")', @complement.Prix, '@complement.Image')">Ajouter</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (filter == "all" || filter == "menus")
+                {
+                    @foreach (var menu in menus ?? new List<csharp_web.Models.Menu>())
+                    {
+                        <div class="product-card">
+                            <img src="@getImageUrl(menu.Image)" alt="@menu.Nom" class="product-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+indisponible';">
+                            <div class="product-info">
+                                <h3 class="product-name">@menu.Nom</h3>
+                                <p class="product-description">@menu.Description</p>
+                                <div class="product-footer">
+                                    <span class="product-price">@menu.Prix.ToString("N0") FCFA</span>
+                                    <button class="add-btn" onclick="addToCart('Menu', @menu.Id, '@menu.Nom.Replace("'", "\\'")', @menu.Prix, '@menu.Image')">Ajouter</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Navigation Bottom -->
+        <nav class="bottom-nav">
+            <a href="@Url.Action("Index", "Home")" class="nav-btn active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span class="nav-label">Accueil</span>
+            </a>
+            <a href="@Url.Action("Index", "Commande")" class="nav-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+                <span class="nav-label">Commandes</span>
+            </a>
+            <a href="@Url.Action("Index", "Account")" class="nav-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="nav-label">Profil</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        function addToCart(type, id, nom, prix, image) {
+            fetch('/Home/AddToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    type: type,
+                    id: id,
+                    nom: nom,
+                    prix: prix,
+                    image: image
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.cart-badge').textContent = data.itemCount;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

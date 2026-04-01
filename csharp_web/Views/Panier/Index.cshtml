@@ -1,0 +1,275 @@
+@model IEnumerable<csharp_web.Models.PanierItem>
+
+@{
+    ViewData["Title"] = "Mon Panier";
+    var total = ViewBag.Total ?? 0;
+    var itemsTotal = ViewBag.ItemsTotal ?? 0;
+    var deliveryPrice = ViewBag.DeliveryPrice ?? 0;
+    var modeConsommation = ViewBag.ModeConsommation ?? "Sur place";
+    var methodePaiement = ViewBag.MethodePaiement ?? MethodePaiement.Wave;
+    var clientId = Context.Session.GetInt32("ClientId");
+
+    Func<string, string> getImageUrl = image =>
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return "https://via.placeholder.com/300x200?text=Image+indisponible";
+        }
+        if (image.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+        return Url.Content($"~/images/{image}");
+    };
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Mon Panier</title>
+    <link rel="stylesheet" href="~/css/panier.css">
+    </head>
+
+    <body>
+        <!-- Conteneur principal mobile -->
+        <div class="mobile-container">
+            <!-- Header -->
+            <header class="header">
+                <a href="@Url.Action("Index", "Home")" class="back-button">
+                    <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </a>
+                <h2 class="page-title">Mon Panier</h2>
+                <div class="header-spacer"></div>
+            </header>
+
+            <!-- Contenu -->
+            <div class="content">
+                @if (!Model.Any())
+                {
+                    <!-- Message panier vide -->
+                    <div class="empty-cart">
+                        <svg class="cart-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 2L7 6H2v14h20V6h-5l-2-4H9z" />
+                            <path d="M9 6v8m6-8v8" />
+                        </svg>
+                        <p class="empty-cart-text">Votre panier est vide</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Messages de succès/erreur -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-error">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <!-- Articles du panier -->
+                    <div class="cart-items-section">
+                        <div class="cart-items">
+                            @foreach (var item in Model)
+                            {
+                                <div class="cart-item">
+                                    <img src="@getImageUrl(item.Image)" alt="@item.Nom" class="item-image"
+                                         onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+indisponible';">
+                                    <div class="item-details">
+                                        <h3 class="item-name">@item.Nom</h3>
+                                        <p class="item-price">@item.Prix.ToString("N0") FCFA</p>
+                                        <div class="quantity-controls">
+                                            <form method="post" action="@Url.Action("UpdateQuantity", "Panier")"
+                                                  style="display: inline;">
+                                                <input type="hidden" name="itemId" value="@item.Id" />
+                                                <input type="hidden" name="quantity" value="@(item.Quantite - 1)" />
+                                                <button type="submit" class="quantity-btn minus">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                            <span class="quantity">@item.Quantite</span>
+                                            <form method="post" action="@Url.Action("UpdateQuantity", "Panier")"
+                                                  style="display: inline;">
+                                                <input type="hidden" name="itemId" value="@item.Id" />
+                                                <input type="hidden" name="quantity" value="@(item.Quantite + 1)" />
+                                                <button type="submit" class="quantity-btn plus">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="@Url.Action("RemoveFromCart", "Panier")"
+                                                  style="display: inline;">
+                                                <input type="hidden" name="itemId" value="@item.Id" />
+                                                <button type="submit" class="delete-btn">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="3 6 5 6 21 6" />
+                                                        <path
+                                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Mode de réception -->
+                    <div class="section-card">
+                        <h3 class="section-title">Mode de réception</h3>
+                        <div class="mode-buttons">
+                            <form method="post" action="@Url.Action("SetModeConsommation", "Panier")" style="display: inline;">
+                                <input type="hidden" name="mode" value="Sur place" />
+                                <button type="submit" class="mode-btn @(modeConsommation == "Sur place" ? "active" : "")">Sur
+                                    place</button>
+                                </form>
+                                <form method="post" action="@Url.Action("SetModeConsommation", "Panier")" style="display: inline;">
+                                    <input type="hidden" name="mode" value="À emporter" />
+                                    <button type="submit" class="mode-btn @(modeConsommation == "À emporter" ? "active" : "")">À
+                                        emporter</button>
+                                    </form>
+                                    <form method="post" action="@Url.Action("SetModeConsommation", "Panier")" style="display: inline;">
+                                        <input type="hidden" name="mode" value="Livraison" />
+                                        <button type="submit"
+                                                class="mode-btn @(modeConsommation == "Livraison" ? "active" : "")">Livraison</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            @if (modeConsommation == "Livraison")
+                            {
+                                <!-- Zone de livraison -->
+                                <div class="section-card">
+                                    <h3 class="section-title">Zone de livraison</h3>
+                                    <form method="post" action="@Url.Action("SetZoneLivraison", "Panier")">
+                                        <select name="zoneId" id="zoneSelect" class="zone-select" required>
+                                            <option value="">Sélectionnez une zone</option>
+                                            @foreach (var zone in ViewBag.Zones as IEnumerable<csharp_web.Models.Zone> ?? new
+                                                                    List<csharp_web.Models.Zone>())
+                                            {
+                                                <option value="@zone.Id" data-prix="@zone.Prix" selected="@(ViewBag.SelectedZoneId == zone.Id)">
+                                                    @zone.Nom</option>
+                                                }
+                                            </select>
+                                            <div class="zone-price-display" id="zonePriceDisplay" style="display: none;">
+                                                <span class="zone-price-label">Prix de livraison :</span>
+                                                <span class="zone-price-amount" id="zonePriceAmount"></span>
+                                            </div>
+                                            <button type="submit" class="zone-submit-btn">Confirmer la zone</button>
+                                        </form>
+                                    </div>
+                                }
+
+                                <!-- Total -->
+                                <div class="section-card">
+                                    <div class="total-breakdown">
+                                        <div class="total-row">
+                                            <span class="total-label">Sous-total :</span>
+                                            <span class="total-amount">@((int)itemsTotal) FCFA</span>
+                                        </div>
+                                        @if (modeConsommation == "Livraison")
+                                        {
+                                            <div class="total-row">
+                                                <span class="total-label">Livraison :</span>
+                                                <span class="total-amount" id="deliveryAmount">@((int)deliveryPrice) FCFA</span>
+                                            </div>
+                                        }
+                                        <div class="total-row total-final">
+                                            <span class="total-label">Total :</span>
+                                            <span class="total-amount" id="totalAmount">@((int)total) FCFA</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bouton commander -->
+                                @if (clientId.HasValue)
+                                {
+                                    <form method="post" action="@Url.Action("PasserCommande", "Panier")">
+                                        <button type="submit" class="order-button">Passer la commande</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="login-required">
+                                        <p class="login-text">Connectez-vous pour passer commande</p>
+                                        <a href="@Url.Action("Login", "Account")" class="login-btn">Se connecter</a>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Navigation Bottom -->
+                        <nav class="bottom-nav">
+                            <a href="@Url.Action("Index", "Home")" class="nav-btn">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                    <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                                <span class="nav-label">Accueil</span>
+                            </a>
+                            <a href="@Url.Action("Index", "Commande")" class="nav-btn">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                </svg>
+                                <span class="nav-label">Commandes</span>
+                            </a>
+                            <a href="@Url.Action("Index", "Account")" class="nav-btn">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <span class="nav-label">Profil</span>
+                            </a>
+                        </nav>
+                    </div>
+
+                    <script>
+                            const itemsTotal = @((int)itemsTotal);
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const select = document.getElementById('zoneSelect');
+                                if (select.value) {
+                                    select.dispatchEvent(new Event('change'));
+                                }
+                            });
+                            document.getElementById('zoneSelect').addEventListener('change', function () {
+                                const selectedOption = this.options[this.selectedIndex];
+                                const prix = parseFloat(selectedOption.getAttribute('data-prix')) || 0;
+                                const display = document.getElementById('zonePriceDisplay');
+                                const amount = document.getElementById('zonePriceAmount');
+                                const deliveryAmount = document.getElementById('deliveryAmount');
+                                const totalAmount = document.getElementById('totalAmount');
+                                if (prix > 0) {
+                                    amount.textContent = prix + ' FCFA';
+                                    display.style.display = 'block';
+                                    if (deliveryAmount) {
+                                        deliveryAmount.textContent = prix + ' FCFA';
+                                        totalAmount.textContent = (itemsTotal + prix) + ' FCFA';
+                                    }
+                                } else {
+                                    display.style.display = 'none';
+                                    if (deliveryAmount) {
+                                        deliveryAmount.textContent = '0 FCFA';
+                                        totalAmount.textContent = itemsTotal + ' FCFA';
+                                    }
+                                }
+                            });
+                    </script>
+                </body>
+
+            </html>

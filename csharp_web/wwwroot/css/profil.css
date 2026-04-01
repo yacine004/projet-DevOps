@@ -1,0 +1,211 @@
+/* Profil CSS */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.mobile-container {
+    max-width: 480px;
+    margin: 0 auto;
+    background-color: white;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    margin-right: 16px;
+}
+
+.back-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.page-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    flex: 1;
+}
+
+.header-spacer {
+    width: 40px;
+}
+
+/* Content */
+.content {
+    padding: 20px;
+    padding-bottom: 120px; /* Increased space for bottom nav */
+}
+
+/* Not logged in */
+.not-logged-in {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.user-icon-large {
+    width: 80px;
+    height: 80px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.not-logged-text {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.login-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #ff6b35;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.login-btn:hover {
+    background-color: #e55a2b;
+}
+
+/* Profile section */
+.profile-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.profile-icon {
+    width: 60px;
+    height: 60px;
+    color: #ff6b35;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.profile-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.profile-phone {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Profile actions */
+.profile-actions {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 20px;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 14px 16px;
+    background-color: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #d63027;
+}
+
+.logout-btn svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 480px;
+    width: 100%;
+    background-color: white;
+    border-top: 1px solid #e0e0e0;
+    padding: 16px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.nav-btn.active {
+    color: #ff6b35;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+}
+
+.nav-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .mobile-container {
+        border-radius: 0;
+    }
+}

@@ -1,0 +1,324 @@
+@{
+    ViewData["Title"] = "Mes Commandes";
+    var clientId = Context.Session.GetInt32("ClientId");
+    var commandesAvecDetails = ViewBag.CommandesAvecDetails as IEnumerable<dynamic>;
+
+    string GetStatusClass(csharp_web.Models.EtatCommande etat)
+    {
+        return etat switch
+        {
+            csharp_web.Models.EtatCommande.EnCours => "in-progress",
+            csharp_web.Models.EtatCommande.Validee => "validated",
+            csharp_web.Models.EtatCommande.Terminee => "completed",
+            csharp_web.Models.EtatCommande.Annulee => "cancelled",
+            _ => "in-progress"
+        };
+    }
+
+    string GetStatusText(csharp_web.Models.EtatCommande etat)
+    {
+        return etat switch
+        {
+            csharp_web.Models.EtatCommande.EnCours => "En cours",
+            csharp_web.Models.EtatCommande.Validee => "Validée",
+            csharp_web.Models.EtatCommande.Terminee => "Terminée",
+            csharp_web.Models.EtatCommande.Annulee => "Annulée",
+            _ => "En cours"
+        };
+    }
+
+    string GetTypeText(csharp_web.Models.TypeCommande type)
+    {
+        return type switch
+        {
+            csharp_web.Models.TypeCommande.SurPlace => "Sur place",
+            csharp_web.Models.TypeCommande.AEmporter => "À emporter",
+            csharp_web.Models.TypeCommande.Livraison => "Livraison",
+            _ => "Sur place"
+        };
+    }
+
+    Func<string, string> getImageUrl = image =>
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return "https://via.placeholder.com/300x200?text=Image+indisponible";
+        }
+        if (image.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+        return Url.Content($"~/images/{image}");
+    };
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Mes Commandes</title>
+    <link rel="stylesheet" href="~/css/commandes.css">
+    </head>
+
+    <body>
+        <!-- Conteneur principal mobile -->
+        <div class="mobile-container">
+            <!-- Header -->
+            <header class="header">
+                <a href="@Url.Action("Index", "Home")" class="back-button">
+                    <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </a>
+                <h2 class="page-title">Mes Commandes</h2>
+                <div class="header-spacer"></div>
+            </header>
+
+            <!-- Contenu -->
+            <div class="content">
+                <!-- Message si non connecté -->
+                @if (!clientId.HasValue)
+                {
+                    <div class="not-logged-in">
+                        <svg class="user-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <p class="not-logged-text">Connectez-vous pour voir vos commandes</p>
+                        <a href="@Url.Action("Login", "Account")" class="login-btn">Se connecter</a>
+                    </div>
+                }
+                else
+                {
+                    <!-- Liste des commandes (visible si connecté) -->
+                    <div class="orders-list">
+                        @if (commandesAvecDetails != null && commandesAvecDetails.Any())
+                        {
+                            @foreach (var item in commandesAvecDetails)
+                            {
+                                var commande = item.Commande as csharp_web.Models.Commande;
+                                var lignes = item.Lignes as List<csharp_web.Models.LigneCommande>;
+                                var total = (decimal)item.Total;
+
+                                if (commande != null)
+                                {
+                                    <div class="order-card">
+                                        <div class="order-header">
+                                            <div class="order-info">
+                                                <h3 class="order-number">Commande #@commande.Id</h3>
+                                                <p class="order-date">@commande.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                                                <p class="order-type">@GetTypeText(commande.Type) @if (commande.Type ==
+                                                    csharp_web.Models.TypeCommande.Livraison && commande.Zone != null) {
+                                                        <span>-
+                                                            @commande.Zone.Nom</span>
+                                                        }
+                                                    </p>
+                                                    @if (commande.Client != null)
+                                                    {
+                                                        <p class="order-client">Client : <b>@commande.Client.Nom</b> -
+                                                            <b>@commande.Client.Telephone</b></p>
+                                                        }
+                                                    </div>
+                                                    <div class="status-container">
+                                                        <span
+                                                        class="order-status status-@GetStatusClass(commande.Etat)">@GetStatusText(commande.Etat)</span>
+                                                        @if (commande.Etat == csharp_web.Models.EtatCommande.EnCours)
+                                                        {
+                                                            <button class="cancel-btn" onclick="annulerCommande(@commande.Id)">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                                </svg>
+                                                                Annuler
+                                                            </button>
+                                                        }
+                                                        <div class="paiement-options" style="margin-top:10px;">
+                                                            <label for="paiement-@commande.Id" style="font-weight:bold;">Mode de paiement :</label>
+                                                            <select id="paiement-@commande.Id" class="paiement-select" style="margin-left:8px;">
+                                                                <option value="Wave">Wave</option>
+                                                                <option value="OM">Orange Money</option>
+                                                            </select>
+                                                            <button class="pay-btn" onclick="payerCommande(@commande.Id)"
+                                                                    id="btn-payer-@commande.Id" @(commande.Etat ==
+                                                                                                                                                                    csharp_web.Models.EtatCommande.Validee ? "" : "disabled")>
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                                     style="vertical-align:middle;">
+                                                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                                                    <line x1="1" y1="10" x2="23" y2="10" />
+                                                                </svg>
+                                                                <span style="vertical-align:middle;">Payer</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                @if (lignes != null && lignes.Any())
+                                                {
+                                                    <div class="order-items">
+                                                        @foreach (var ligne in lignes)
+                                                        {
+                                                            var nomProduit = "Produit inconnu";
+                                                            var imageProduit = "";
+                                                            var prixUnitaire = 0.0;
+
+                                                            if (ligne.Burger != null)
+                                                            {
+                                                                nomProduit = ligne.Burger.Nom ?? "Burger";
+                                                                imageProduit = ligne.Burger.Image ?? "";
+                                                                prixUnitaire = ligne.Burger.Prix;
+                                                            }
+                                                            else if (ligne.Menu != null)
+                                                            {
+                                                                nomProduit = ligne.Menu.Nom ?? "Menu";
+                                                                imageProduit = ligne.Menu.Image ?? "";
+                                                                prixUnitaire = ligne.Menu.Prix;
+                                                            }
+                                                            else if (ligne.Complement != null)
+                                                            {
+                                                                nomProduit = ligne.Complement.Nom ?? "Complément";
+                                                                imageProduit = ligne.Complement.Image ?? "";
+                                                                prixUnitaire = ligne.Complement.Prix;
+                                                            }
+
+                                                            <div class="order-item">
+                                                                <div class="item-info">
+                                                                    @if (!string.IsNullOrEmpty(imageProduit))
+                                                                    {
+                                                                        <img src="@getImageUrl(imageProduit)" alt="@nomProduit" class="item-image"
+                                                                             onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+indisponible';" />
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <div class="item-image-placeholder">
+                                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                                <path d="M9 2L7 6H2v14h20V6h-5l-2-4H9z" />
+                                                                            </svg>
+                                                                        </div>
+                                                                    }
+                                                                    <div class="item-details">
+                                                                        <span class="item-name">@nomProduit</span>
+                                                                        <span class="item-quantity">Quantité: @ligne.Quantite</span>
+                                                                    </div>
+                                                                </div>
+                                                                <span class="item-price">@((int)(prixUnitaire * ligne.Quantite))</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+
+                                                @if (commande.Type == csharp_web.Models.TypeCommande.Livraison && commande.Zone != null)
+                                                {
+                                                    <div class="order-delivery">
+                                                        <div class="delivery-info">
+                                                            <span class="delivery-label">Livraison</span>
+                                                            <span class="delivery-zone">@commande.Zone.Nom</span>
+                                                        </div>
+                                                        <span class="delivery-price">@((int)commande.Zone.Prix)</span>
+                                                    </div>
+                                                }
+
+                                                <div class="order-footer">
+                                                    <span class="total-label">Total</span>
+                                                    <span class="total-amount">@((int)total)</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="no-orders">
+                                        <svg class="order-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="2">
+                                            <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                        </svg>
+                                        <p class="no-orders-text">Aucune commande trouvée</p>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Navigation Bottom -->
+                    <nav class="bottom-nav">
+                        <a href="@Url.Action("Index", "Home")" class="nav-btn">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                            <span class="nav-label">Accueil</span>
+                        </a>
+                        <a href="@Url.Action("Index", "Commande")" class="nav-btn active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            </svg>
+                            <span class="nav-label">Commandes</span>
+                        </a>
+                        <a href="@Url.Action("Index", "Account")" class="nav-btn">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span class="nav-label">Profil</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <script>
+                        function annulerCommande(commandeId) {
+                            fetch('/Commande/AnnulerCommande', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: new URLSearchParams({
+                                    commandeId: commandeId
+                                })
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        location.reload();
+                                    } else {
+                                        console.error('Erreur : ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                });
+                        }
+
+                        function payerCommande(commandeId) {
+                            var select = document.getElementById('paiement-' + commandeId);
+                            var methodePaiement = select ? select.value : 'Wave';
+
+                            fetch('/Commande/PayerCommande', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: new URLSearchParams({
+                                    commandeId: commandeId,
+                                    methodePaiement: methodePaiement
+                                })
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        location.reload();
+                                    } else {
+                                        console.error('Erreur : ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                });
+                        }
+                </script>
+            </body>
+
+        </html>

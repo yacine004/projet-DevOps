@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Connexion Livreur";
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Connexion Livreur</title>
+    <link rel="stylesheet" href="~/css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 2L7 6H2v14h20V6h-5l-2-4H9z"/>
+                    <path d="M9 6v8m6-8v8"/>
+                </svg>
+                <h1>Brasil Burger</h1>
+                <p>Connexion Livreur</p>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="error-message">
+                    @ViewBag.Error
+                </div>
+            }
+
+            <form method="post" action="@Url.Action("Login", "Livreur")">
+                <div class="form-group">
+                    <label for="telephone">Numéro de téléphone</label>
+                    <input type="tel" id="telephone" name="telephone" required placeholder="771234567">
+                </div>
+
+                <button type="submit" class="login-btn">Se connecter</button>
+            </form>
+
+            <div class="links">
+                <a href="@Url.Action("Login", "Account")">Connexion Client</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

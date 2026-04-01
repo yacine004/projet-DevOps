@@ -1,0 +1,13 @@
+# Fichiers inutiles au build
+**/bin
+**/obj
+
+# Dossiers IDE
+.vs
+.vscode
+
+# Git
+.git
+
+# Divers
+node_modules

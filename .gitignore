@@ -1,0 +1,40 @@
+# ASP.NET Core
+bin/
+obj/
+*.user
+*.tmp
+*.log
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.tmp
+*.log
+
+# Rider
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Migrations (if not wanted, but since we used them)
+# Migrations/
+
+# Database
+*.db
+*.sqlite
+
+# Secrets
+appsettings.Development.json

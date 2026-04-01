@@ -1,0 +1,128 @@
+@{
+    ViewData["Title"] = "Dashboard Livreur";
+    var livreurId = Context.Session.GetInt32("LivreurId");
+    var livreurNom = Context.Session.GetString("LivreurNom");
+    var livreurPrenom = Context.Session.GetString("LivreurPrenom");
+    var livraisons = ViewBag.Livraisons as List<csharp_web.Models.Commande>;
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Dashboard Livreur</title>
+    <link rel="stylesheet" href="~/css/livreur.css">
+</head>
+<body>
+    <!-- Conteneur principal mobile -->
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="header">
+            <h2 class="page-title">Livraisons du Jour</h2>
+            <button class="logout-btn" onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Contenu -->
+        <div class="content">
+            @if (!livreurId.HasValue)
+            {
+                <div class="not-logged-in">
+                    <p>Connectez-vous en tant que livreur</p>
+                    <a href="@Url.Action("Login", "Livreur")" class="login-btn">Se connecter</a>
+                </div>
+            }
+            else
+            {
+                <div class="welcome-section">
+                    <h3>Bonjour @livreurPrenom @livreurNom</h3>
+                    <p>Voici vos livraisons pour aujourd'hui</p>
+                </div>
+
+                <div class="deliveries-list">
+                    @if (livraisons != null && livraisons.Any())
+                    {
+                        @foreach (var livraison in livraisons)
+                        {
+                            <div class="delivery-card">
+                                <div class="delivery-header">
+                                    <h4>Livraison #@livraison.Id</h4>
+                                    <span class="delivery-status">@livraison.Etat</span>
+                                </div>
+                                <div class="delivery-info">
+                                    <p><strong>Client:</strong> @livraison.Client?.Prenom @livraison.Client?.Nom</p>
+                                    <p><strong>Téléphone:</strong> @livraison.Client?.Telephone</p>
+                                    <p><strong>Adresse:</strong> @livraison.Zone?.Nom</p>
+                                    <p><strong>Total:</strong> @livraison.Total FCFA</p>
+                                    <p><strong>Heure:</strong> @livraison.Date.ToLocalTime().ToString("HH:mm")</p>
+                                </div>
+                                @if (livraison.Etat != csharp_web.Models.EtatCommande.Terminee)
+                                {
+                                    <button class="complete-btn" onclick="marquerTerminee(@livraison.Id)">
+                                        Marquer comme livrée
+                                    </button>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="no-deliveries">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 2L7 6H2v14h20V6h-5l-2-4H9z"/>
+                                <path d="M9 6v8m6-8v8"/>
+                            </svg>
+                            <p>Aucune livraison pour aujourd'hui</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <script>
+        function marquerTerminee(commandeId) {
+            if (confirm('Marquer cette livraison comme terminée ?')) {
+                fetch('/Livreur/MarquerTerminee', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        commandeId: commandeId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        console.error('Erreur : ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function logout() {
+            fetch('/Livreur/Logout', {
+                method: 'POST'
+            })
+            .then(() => {
+                window.location.href = '/Livreur/Login';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

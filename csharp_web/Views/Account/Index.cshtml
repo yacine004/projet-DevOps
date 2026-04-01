@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Mon Profil";
+    var clientId = Context.Session.GetInt32("ClientId");
+    var clientNom = Context.Session.GetString("ClientNom");
+    var clientPrenom = Context.Session.GetString("ClientPrenom");
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brasil Burger - Mon Profil</title>
+    <link rel="stylesheet" href="~/css/profil.css">
+</head>
+<body>
+    <!-- Conteneur principal mobile -->
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="header">
+            <a href="@Url.Action("Index", "Home")" class="back-button">
+                <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </a>
+            <h2 class="page-title">Mon Profil</h2>
+            <div class="header-spacer"></div>
+        </header>
+
+        <!-- Contenu -->
+        <div class="content">
+            @if (!clientId.HasValue)
+            {
+                <div class="not-logged-in">
+                    <svg class="user-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <p class="not-logged-text">Connectez-vous pour voir votre profil</p>
+                    <a href="@Url.Action("Login", "Account")" class="login-btn">Se connecter</a>
+                </div>
+            }
+            else
+            {
+                <!-- Profil connecté -->
+                <div class="profile-section">
+                    <div class="profile-header">
+                        <svg class="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <div class="profile-info">
+                            <h3 class="profile-name">@clientPrenom @clientNom</h3>
+                            <p class="profile-phone">@Context.Session.GetString("ClientTelephone")</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="logout-btn" onclick="logout()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            Se déconnecter
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Navigation Bottom -->
+        <nav class="bottom-nav">
+            <a href="@Url.Action("Index", "Home")" class="nav-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span class="nav-label">Accueil</span>
+            </a>
+            <a href="@Url.Action("Index", "Commande")" class="nav-btn">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+                <span class="nav-label">Commandes</span>
+            </a>
+            <a href="@Url.Action("Index", "Account")" class="nav-btn active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="nav-label">Profil</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        function logout() {
+            fetch('/Account/Logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(() => {
+                window.location.href = '/Account/Login';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
