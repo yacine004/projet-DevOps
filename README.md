@@ -1,16 +1,47 @@
-# Mise en Contexte pour GitHub Copilot : Projet Brasil Burger - Transition C# (Client) vers Symfony (Gestionnaire)
+# Projet Brasil Burger - Application de Commande de Burgers
 
 ## Vue d'ensemble du Projet
-Ce projet est une application de commande de burgers en ligne, divisée en deux parties principales selon l'énoncé :
-- **Partie Client** : Développée en **C# ASP.NET Core MVC** (déjà terminée). Elle permet aux utilisateurs de naviguer dans le catalogue, gérer leur panier, passer des commandes, et payer via Wave ou Orange Money.
+
+Ce projet est une application web de commande de burgers en ligne, divisée en deux parties principales :
+
+- **Partie Client** : Développée en **C# ASP.NET Core MVC** (.NET 8). Elle permet aux utilisateurs de naviguer dans le catalogue, gérer leur panier, passer des commandes, et payer via Wave ou Orange Money.
 - **Partie Gestionnaire** : À développer en **Symfony** (PHP). Elle sera utilisée par les administrateurs/gestionnaires pour gérer les produits (burgers, menus, compléments), les commandes, les clients, les livreurs, les zones de livraison, et les paiements. Cette partie doit être une interface web sécurisée avec authentification.
 
-Le projet utilise **PostgreSQL** comme base de données commune. La partie C# a été déployée sur Render avec Docker, et la partie Symfony devra s'intégrer à la même BDD sans conflits.
+Le projet utilise **PostgreSQL** comme base de données commune. La partie C# est containerisée avec Docker et peut être déployée localement ou sur des plateformes comme Render.
 
-## Modèles C# Créés (Entités)
+## Déploiement de la Partie C# (Client)
+
+La partie C# est prête et containerisée. Pour la déployer localement :
+
+### Prérequis
+
+- Docker et Docker Compose installés.
+
+### Instructions de Déploiement
+
+1. Clonez le repository :
+
+   ```bash
+   git clone https://github.com/yacine004/projet-DevOps.git
+   cd projet-DevOps
+   ```
+
+2. Lancez l'application avec Docker Compose :
+
+   ```bash
+   docker compose up --build
+   ```
+
+3. Accédez à l'application sur `http://localhost:8080`.
+
+La base de données PostgreSQL est automatiquement créée et peuplée avec des données de test via Entity Framework Core (EnsureCreated).
+
+## Modèles C# (Entités)
+
 Voici les entités principales créées en C# (dans le dossier `Models/`). Elles définissent la structure des données. Adaptez-les en entités Doctrine pour Symfony (avec annotations `@ORM`).
 
 ### 1. Client
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -19,6 +50,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Une commande appartient à un client (`Commande.ClientId`).
 
 ### 2. Commande
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `DateTime Date`
@@ -32,6 +64,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Appartient à Client, Zone, Livreur, Paiement. A plusieurs LigneCommande.
 
 ### 3. LigneCommande
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `int Quantite`
@@ -42,6 +75,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Appartient à Commande, et à un produit (Burger, Menu, ou Complement).
 
 ### 4. Burger
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -51,6 +85,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Peut être dans plusieurs LigneCommande.
 
 ### 5. Menu
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -60,6 +95,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Peut être dans plusieurs LigneCommande.
 
 ### 6. Complement
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -69,6 +105,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Peut être dans plusieurs LigneCommande.
 
 ### 7. Zone
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -76,6 +113,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : A plusieurs Livreur, utilisée dans Commande pour livraison.
 
 ### 8. Livreur
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -85,6 +123,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Appartient à Zone, assigné à Commande.
 
 ### 9. Gestionnaire
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `string Nom` (requis, max 255)
@@ -95,6 +134,7 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Utilisé pour l'authentification des admins (pas de relations directes avec autres entités).
 
 ### 10. Paiement
+
 - **Propriétés** :
   - `int Id` (clé primaire)
   - `DateTime Date`
@@ -104,12 +144,14 @@ Voici les entités principales créées en C# (dans le dossier `Models/`). Elles
 - **Relations** : Appartient à Commande.
 
 ### Enums
+
 - `EtatCommande` : EnCours, Validee, Terminee, Annulee
 - `TypeCommande` : SurPlace, AEmporter, Livraison
 - `MethodePaiement` : Wave, OM
 
 ## Schéma de la Base de Données (PostgreSQL)
-La BDD est créée via Entity Framework Core (migrations). Voici le schéma des tables principales (colonnes, types, clés, contraintes). Utilisez cela pour créer les entités Doctrine en Symfony.
+
+La BDD est créée via Entity Framework Core (EnsureCreated). Voici le schéma des tables principales (colonnes, types, clés, contraintes). Utilisez cela pour créer les entités Doctrine en Symfony.
 
 - **client** :
   - id (serial, primary key)
@@ -175,19 +217,21 @@ La BDD est créée via Entity Framework Core (migrations). Voici le schéma des 
   - commande_id (integer, foreign key to commande.id)
 
 **Remarques BDD** :
+
 - Utilisez les mêmes noms de tables/colonnes pour éviter les conflits.
-- Les migrations EF ont créé des index et contraintes automatiques.
 - Pour Symfony, configurez Doctrine avec PostgreSQL (dans `.env` : `DATABASE_URL=postgresql://user:pass@host:port/db`).
 
-## Fonctionnalités Déjà Implémentées en C# (Partie Client)
-- **Catalogue** : Affichage des burgers, menus, compléments avec filtres.
+## Fonctionnalités Implémentées en C# (Partie Client)
+
+- **Catalogue** : Affichage des burgers, menus, compléments avec images (avec fallbacks).
 - **Panier** : Ajout/suppression d'articles, calcul du total, choix du mode (sur place/à emporter/livraison), zone de livraison.
-- **Commandes** : Passage de commande (avec authentification), affichage des commandes client, annulation, paiement (Wave/OM).
+- **Commandes** : Passage de commande (avec authentification), affichage des commandes client, annulation, paiement (Wave/OM simulé).
 - **Authentification** : Connexion/inscription clients via session.
 - **Paiement** : Simulation (pas d'intégration réelle), bouton désactivé si commande non validée.
 - **UI Mobile** : Design responsive pour mobile.
 
 ## Directives pour la Partie Symfony (Gestionnaire)
+
 - **Objectif** : Créer une interface admin pour gérer les données (CRUD complet pour toutes les entités).
 - **Authentification** : Utilisez les entités Gestionnaire pour login/logout sécurisé (avec roles si besoin).
 - **CRUD** :
@@ -201,4 +245,4 @@ La BDD est créée via Entity Framework Core (migrations). Voici le schéma des 
 - **Éviter les Erreurs** : Respectez les types/relations des modèles C#. Testez les requêtes Doctrine pour éviter les conflits de clés étrangères.
 - **Déploiement** : Préparez pour Docker/Render comme la partie C#.
 
-Si vous avez des questions ou besoin d'ajustements, demandez ! Copiez ce texte dans Copilot pour commencer.
+Si vous avez des questions ou besoin d'ajustements, demandez !
