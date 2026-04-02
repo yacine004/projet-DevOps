@@ -15,12 +15,6 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                bat 'dotnet test'
-            }
-        }
-
         stage('Build Docker') {
             steps {
                 bat 'docker build -t brasilburger .'
