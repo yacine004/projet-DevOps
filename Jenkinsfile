@@ -32,9 +32,9 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                bat 'docker stop brasilburger || exit 0'
-                bat 'docker rm brasilburger || exit 0'
-                bat 'docker run -d --name brasilburger -p 8082:8080 brasilburger'
+                bat 'docker stop brasilburger_ci || exit 0'
+                bat 'docker rm brasilburger_ci || exit 0'
+                bat 'docker run -d --name brasilburger_ci -p 8084:8080 brasilburger'
             }
         }
     }

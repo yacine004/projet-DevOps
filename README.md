@@ -562,6 +562,28 @@ docker --version
 docker info
 
 Le Dockerfile — Construire une Image
+Le Dockerfile est le fichier de configuration qui décrit comment construire votre image Docker.
+
+Pour ce projet BrasilBurger, le Dockerfile est à la racine du dépôt et construit une image .NET 8 qui écoute sur le port 8080.
+
+### Construire l'image BrasilBurger
+cd projet-semestre_1_brasilburger-csharp
+docker build -t brasilburger .
+
+### Lancer l'image localement
+docker run -d --name brasilburger -p 8083:8080 brasilburger
+
+# Accéder à l'application
+http://localhost:8083
+
+### Docker Desktop — configuration recommandée
+- Utiliser le backend Linux/WSL2 pour de meilleures performances.
+- Ressources recommandées : CPU 4, Mémoire 4 Go, Swap 2 Go, Disk image 64 Go.
+- Activer l'intégration WSL pour la distribution utilisée.
+- Activer Kubernetes dans Docker Desktop si vous souhaitez tester le déploiement local.
+- Vérifier que le dossier du projet est accessible et partagé avec Docker Desktop.
+- Si Docker Desktop vous le propose, activer "Use the WSL 2 based engine" et "Enable Kubernetes".
+
 Le Dockerfile est le fichier de configuration qui décrit comment construire votre image Docker. Exemples pour différents types d'applications :
 Application Node.js
 # Dockerfile — Application Node.js
@@ -814,21 +836,30 @@ Fichier service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: mon-app-service
+  name: brasilburger-service
   namespace: production
 spec:
   selector:
-    app: mon-app
+    app: brasilburger
   ports:
     - protocol: TCP
       port: 80           # Port exposé externellement
-      targetPort: 3000   # Port du conteneur
+      targetPort: 8080   # Port du conteneur
   type: LoadBalancer     # Ou 'ClusterIP' pour usage interne uniquement
 
 Commandes kubectl Essentielles
 # Appliquer une configuration
 kubectl apply -f kubernetes/
 
+# Vérifier le déploiement BrasilBurger
+kubectl get pods -n production
+kubectl get service brasilburger-service -n production
+
+# Si vous utilisez Docker Desktop Kubernetes, exposer le service localement
+kubectl port-forward service/brasilburger-service 8083:80 -n production
+
+# Accéder à l'application via Kubernetes
+http://localhost:8083
 
 # Voir les Pods en cours
 kubectl get pods -n production

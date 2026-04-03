@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - 'alerting_rules.yml'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'windows_server'
+    static_configs:
+      - targets: ['localhost:9182']
+
+  - job_name: 'brasilburger-app'
+    static_configs:
+      - targets: ['localhost:8083']
+    metrics_path: '/metrics'
+    # Note : votre application doit exposer un endpoint /metrics pour que Prometheus puisse collecter des métriques applicatives.
+    # Si vous n'avez pas encore d'instrumentation, Prometheus pourra collecter uniquement les métriques système et cluster.
+
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
