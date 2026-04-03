@@ -570,9 +570,35 @@ Pour ce projet BrasilBurger, le Dockerfile est à la racine du dépôt et constr
 cd projet-semestre_1_brasilburger-csharp
 docker build -t yacine1108/brasilburger:latest .
 
-### Pousser vers Docker Hub
-docker login
+### Pousser vers Docker Hub (avec PAT)
+# 1. Créer un Personal Access Token sur https://app.docker.com/settings
+# 2. Se connecter avec le PAT :
+docker login --username yacine1108
+# (entrer le PAT comme mot de passe)
+
+# 3. Pousser l'image :
 docker push yacine1108/brasilburger:latest
+
+### Vérifier sur Docker Hub
+# L'image sera visible sur :
+### Configuration Jenkins pour Docker Hub
+
+1. **Accéder aux credentials Jenkins** :
+   - Aller sur : http://localhost:9090/credentials/store/system/domain/_/
+   - Cliquer sur "Add Credentials"
+
+2. **Ajouter les credentials Docker Hub** :
+   - **Kind** : Username with password
+   - **Scope** : Global
+   - **Username** : `yacine1108`
+   - **Password** : [Ton Personal Access Token Docker Hub]
+   - **ID** : `docker-hub-credentials`
+   - **Description** : Docker Hub credentials for BrasilBurger
+
+3. **Lancer le pipeline** :
+   - Aller sur : http://localhost:9090/job/brasilburger-pipeline/
+   - Cliquer sur "Build Now"
+   - Le pipeline va automatiquement pousser l'image vers Docker Hub
 
 ### Lancer l'image localement
 docker run -d --name brasilburger -p 8083:8080 yacine1108/brasilburger:latest
