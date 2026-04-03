@@ -25,7 +25,7 @@ COPY --from=build /app/publish .
 ENV PORT=8080
 ENV ASPNETCORE_URLS=http://+:$PORT
 ENV ASPNETCORE_ENVIRONMENT=Development
-ENV ConnectionStrings__DefaultConnection="postgresql://neondb_owner:npg_Vy0MDeICAi8h@ep-solitary-cake-a4najv73-pooler.us-east-1.aws.neon.tech/brasil_burger_db?sslmode=require&channel_binding=require"
+ENV ConnectionStrings__DefaultConnection="Host=ep-solitary-cake-a4najv73-pooler.us-east-1.aws.neon.tech;Port=5432;Database=brasil_burger_db;Username=neondb_owner;Password=npg_Vy0MDeICAi8h;SSL Mode=Require;"
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "csharp_web.dll"]
