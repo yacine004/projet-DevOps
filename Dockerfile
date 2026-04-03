@@ -24,7 +24,8 @@ COPY --from=build /app/publish .
 
 ENV PORT=8080
 ENV ASPNETCORE_URLS=http://+:$PORT
-ENV ConnectionStrings__DefaultConnection="Host=db;Database=brasil_burger;Username=postgres;Password=password;SSL Mode=Disable"
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ConnectionStrings__DefaultConnection="Data Source=local.db"
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "csharp_web.dll"]
