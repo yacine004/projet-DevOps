@@ -34,7 +34,7 @@ pipeline {
             steps {
                 bat 'docker stop brasilburger || exit 0'
                 bat 'docker rm brasilburger || exit 0'
-                bat 'docker run -d --name brasilburger -p 8081:8080 brasilburger'
+                bat 'docker run -d --name brasilburger -p 8082:8080 brasilburger'
             }
         }
     }
