@@ -26,7 +26,16 @@ pipeline {
 
         stage('Build Docker') {
             steps {
-                bat 'docker build -t brasilburger .'
+                bat 'docker build -t yacine1108/brasilburger:latest .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    bat 'docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%'
+                    bat 'docker push yacine1108/brasilburger:latest'
+                }
             }
         }
 
@@ -34,7 +43,7 @@ pipeline {
             steps {
                 bat 'docker stop brasilburger_ci || exit 0'
                 bat 'docker rm brasilburger_ci || exit 0'
-                bat 'docker run -d --name brasilburger_ci -p 8084:8080 brasilburger'
+                bat 'docker run -d --name brasilburger_ci -p 8084:8080 yacine1108/brasilburger:latest'
             }
         }
     }

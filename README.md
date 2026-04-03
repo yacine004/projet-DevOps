@@ -568,10 +568,14 @@ Pour ce projet BrasilBurger, le Dockerfile est à la racine du dépôt et constr
 
 ### Construire l'image BrasilBurger
 cd projet-semestre_1_brasilburger-csharp
-docker build -t brasilburger .
+docker build -t yacine1108/brasilburger:latest .
+
+### Pousser vers Docker Hub
+docker login
+docker push yacine1108/brasilburger:latest
 
 ### Lancer l'image localement
-docker run -d --name brasilburger -p 8083:8080 brasilburger
+docker run -d --name brasilburger -p 8083:8080 yacine1108/brasilburger:latest
 
 # Accéder à l'application
 http://localhost:8083

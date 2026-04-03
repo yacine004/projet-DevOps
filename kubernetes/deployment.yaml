@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
       - name: brasilburger
-        image: brasilburger:latest
-        imagePullPolicy: IfNotPresent
+        image: yacine1108/brasilburger:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         resources:
