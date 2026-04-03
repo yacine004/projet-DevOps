@@ -1,27 +1,12 @@
 services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: brasil_burger
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
   web:
     build: .
     image: brasilburger
-    depends_on:
-      - db
     environment:
-      ConnectionStrings__DefaultConnection: "Host=db;Database=brasil_burger;Username=postgres;Password=password;SSL Mode=Disable"
+      ConnectionStrings__DefaultConnection: "Host=ep-solitary-cake-a4najv73-pooler.us-east-1.aws.neon.tech;Port=5432;Database=brasil_burger_db;Username=neondb_owner;Password=npg_Vy0MDeICAi8h;Ssl Mode=Require;Channel Binding=Require"
       ASPNETCORE_URLS: "http://+:8080"
       PORT: "8080"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
-      - "8081:8080"
-
-volumes:
-  db_data:
+      - "8082:8080"
+    restart: unless-stopped

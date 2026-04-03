@@ -693,9 +693,17 @@ volumes:
 # Lancer tous les services
 docker-compose up -d
 
-
 # Arrêter tous les services
 docker-compose down
+
+# Exemple concret pour BrasilBurger
+# Le service web se connecte à la base Neon PostgreSQL distante.
+# Après le build Docker, lancez l'application en conteneur :
+cd projet-semestre_1_brasilburger-csharp
+docker compose up -d
+
+# Accéder à l'application
+http://localhost:8082
 
 
 # Voir les logs de tous les services
