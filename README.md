@@ -703,7 +703,7 @@ cd projet-semestre_1_brasilburger-csharp
 docker compose up -d
 
 # Accéder à l'application
-http://localhost:8082
+http://localhost:8083
 
 
 # Voir les logs de tous les services

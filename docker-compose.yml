@@ -8,5 +8,5 @@ services:
       PORT: "8080"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
-      - "8082:8080"
+      - "8083:8080"
     restart: unless-stopped
