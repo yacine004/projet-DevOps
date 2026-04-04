@@ -1,0 +1,47 @@
+name: Pipeline CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore csharp_web/csharp_web.csproj
+
+      - name: Build application
+        run: dotnet build csharp_web/csharp_web.csproj --configuration Release --no-restore
+
+      - name: Publish application
+        run: dotnet publish csharp_web/csharp_web.csproj --configuration Release --output ./publish --no-restore
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v5
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/brasilburger:latest
+          platforms: linux/amd64
