@@ -2,6 +2,7 @@ using csharp_web.Data;
 using csharp_web.Repositories;
 using csharp_web.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // ===== DbContext =====
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// ===== HEALTH CHECKS =====
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString!, name: "database", failureStatus: HealthStatus.Degraded);
 
 // ===== SESSION =====
 builder.Services.AddSession(options =>
@@ -67,6 +72,9 @@ app.UseRouting();
 
 app.UseSession();
 app.UseAuthorization();
+
+// ===== HEALTH CHECK ENDPOINT (requis par Kubernetes liveness probe) =====
+app.MapHealthChecks("/health");
 
 app.MapControllerRoute(
     name: "default",
