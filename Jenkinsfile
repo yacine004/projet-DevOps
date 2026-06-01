@@ -7,10 +7,11 @@ pipeline {
     }
 
     environment {
-        UBUNTU_IP   = '192.168.1.27'
+        UBUNTU_IP  = '192.168.1.27'
         UBUNTU_USER = 'devops'
-        APP_NAME    = 'brasilburger'
-        DOCKER_TAG  = "${env.BUILD_NUMBER}"
+        APP_NAME   = 'brasilburger'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        REPO_URL   = 'https://github.com/yacine004/projet-DevOps'
     }
 
     stages {
@@ -43,38 +44,58 @@ pipeline {
             }
         }
 
-        stage('Transfert vers Ubuntu') {
+        stage('Build et Push Docker (Ubuntu)') {
             steps {
-                sshagent(['ubuntu-ssh']) {
-                    bat "ssh -o StrictHostKeyChecking=no %UBUNTU_USER%@%UBUNTU_IP% \"mkdir -p /home/devops/app\""
-                    bat "scp -r -o StrictHostKeyChecking=no . %UBUNTU_USER%@%UBUNTU_IP%:/home/devops/app/"
-                }
-            }
-        }
+                script {
+                    def remote = [:]
+                    remote.name        = 'ubuntu'
+                    remote.host        = env.UBUNTU_IP
+                    remote.user        = env.UBUNTU_USER
+                    remote.allowAnyHosts = true
 
-        stage('Docker Build (Ubuntu)') {
-            steps {
-                sshagent(['ubuntu-ssh']) {
-                    bat "ssh -o StrictHostKeyChecking=no %UBUNTU_USER%@%UBUNTU_IP% \"cd /home/devops/app && docker build -t %APP_NAME%:%DOCKER_TAG% . && docker tag %APP_NAME%:%DOCKER_TAG% %APP_NAME%:latest\""
-                }
-            }
-        }
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'ubuntu-ssh', keyFileVariable: 'SSH_KEY'),
+                        usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
+                    ]) {
+                        remote.identityFile = SSH_KEY
 
-        stage('Push Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sshagent(['ubuntu-ssh']) {
-                        bat "ssh -o StrictHostKeyChecking=no %UBUNTU_USER%@%UBUNTU_IP% \"docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD% && docker tag %APP_NAME%:latest yacine1108/brasilburger:%DOCKER_TAG% && docker push yacine1108/brasilburger:%DOCKER_TAG% && docker push yacine1108/brasilburger:latest\""
+                        // Clone ou pull le repo sur Ubuntu
+                        sshCommand remote: remote, command: """
+                            if [ -d /home/devops/app/.git ]; then
+                                cd /home/devops/app && git pull origin main
+                            else
+                                rm -rf /home/devops/app && git clone https://github.com/yacine004/projet-DevOps /home/devops/app
+                            fi
+                        """
+
+                        // Docker build
+                        sshCommand remote: remote, command: "cd /home/devops/app && docker build -t yacine1108/brasilburger:${env.DOCKER_TAG} . && docker tag yacine1108/brasilburger:${env.DOCKER_TAG} yacine1108/brasilburger:latest"
+
+                        // Docker push
+                        sshCommand remote: remote, command: "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} && docker push yacine1108/brasilburger:${env.DOCKER_TAG} && docker push yacine1108/brasilburger:latest"
                     }
                 }
             }
         }
 
         stage('Deploy Kubernetes') {
-            when { branch 'main' }
             steps {
-                sshagent(['ubuntu-ssh']) {
-                    bat "ssh -o StrictHostKeyChecking=no %UBUNTU_USER%@%UBUNTU_IP% \"kubectl apply -f /home/devops/app/kubernetes/ && kubectl set image deployment/brasilburger-deployment brasilburger=%APP_NAME%:%DOCKER_TAG% -n production && kubectl rollout status deployment/brasilburger-deployment -n production\""
+                script {
+                    def remote = [:]
+                    remote.name        = 'ubuntu'
+                    remote.host        = env.UBUNTU_IP
+                    remote.user        = env.UBUNTU_USER
+                    remote.allowAnyHosts = true
+
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ubuntu-ssh', keyFileVariable: 'SSH_KEY')]) {
+                        remote.identityFile = SSH_KEY
+
+                        sshCommand remote: remote, command: """
+                            kubectl apply -f /home/devops/app/kubernetes/ -n production
+                            kubectl set image deployment/brasilburger-deployment brasilburger=yacine1108/brasilburger:${env.DOCKER_TAG} -n production
+                            kubectl rollout status deployment/brasilburger-deployment -n production
+                        """
+                    }
                 }
             }
         }
@@ -82,10 +103,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline réussi — BrasilBurger déployé avec succès !'
+            echo 'Pipeline reussi — BrasilBurger deploye avec succes !'
         }
         failure {
-            echo 'Échec du pipeline — voir les logs ci-dessus'
+            echo 'Echec du pipeline — voir les logs ci-dessus'
         }
     }
 }
