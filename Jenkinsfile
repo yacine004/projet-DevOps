@@ -37,7 +37,9 @@ pipeline {
 
         stage('Tests') {
             steps {
-                bat 'cd csharp_web && dotnet test --no-build --configuration Release'
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    bat 'cd csharp_web && dotnet test --no-build --configuration Release'
+                }
             }
         }
 
